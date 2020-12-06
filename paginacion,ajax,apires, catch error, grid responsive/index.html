@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paginacion</title>
+</head>
+<body>
+    <h1>Pokemones</h1>
+    <nav class="links"></nav>
+    <main class="grid-fluid"></main>
+    <style>
+        .grid-fluid{        /* reticula responsive */
+            display:grid;
+            grid-template-columns: repeat(auto-fit,minmax(200px, 1fr));
+            text-align: center;
+        }
+        .loader{
+            display:block;
+            margin:auto;
+            fill:chocolate;
+            background-color: crimson;
+        }
+    </style>
+    
+    <script>
+        const d= document;
+        $main = d.querySelector("main")           //el signo $ indica que la variable tiene informacion tipo DOM osea HTML
+        $links = d.querySelector(".links")
+
+        //API de pokemones
+        let apiPoke = "https://pokeapi.co/api/v2/pokemon/";
+
+        async function loadPokemones(url){
+            //console.log(url)
+            try{
+                    //muestro imagen de loader mientras carga la API
+                $main.innerHTML = `<img class="loader" src=circles.svg alt = "Cargando...">`
+
+                let res = await fetch(apiPoke);
+                json = await res.json();
+                //console.log(res)
+                $template ="";
+                $prevLink ="";      //para boton previo
+                $nextLink = "";     //para boton next
+
+                //console.log(json)
+
+                if(!res.ok) throw{ status: res.status, statusText: res.statusText} //Todo ok?
+                   //armando el template
+                //usaremos for y no foreach para recorrer, ya que el primero espera a que responda la api antes de continuar.
+                for (let i = 0; i < json.results.length; i++) {
+                    const element = json.results[i];
+                    //console.log(element); //<-- conozco el pokemon
+
+                    try {
+                        let res = await fetch(element.url)
+                        pokemon = await res.json();
+                        console.log(res, pokemon)
+                            //captura de error
+                        if(!res.ok) throw{ status: res.status, statusText: res.statusText} // pregunto si esta todo OK
+                            //voy guardando en template cada pokemon
+                        $template += `
+                        <figure>
+                            <img src ="${pokemon.sprites.front_default}" alt="${pokemon.name}">
+                            <figcaption>${pokemon.name}</figcaption>
+                        </figure>
+                            `
+                    } catch (err) {
+
+                        console.log(err);
+                        let message = err.statusText || "No se encontro Pokemon" // el or es por si el err.statusText no esta definido
+                            //mostrar error capturado
+                        $template+= `
+                        <figure>
+                            <figcaption>ERROR${err.status} : ${message}</figcaption>
+                        </figure>`      
+                    }
+                }
+
+              $main.innerHTML=$template;
+
+            }catch(err){
+
+                console.log(err);
+                let message = err.statusText || "Ocurrio un error"
+                $main.innerHTML = `<p>Error ${err.status}: ${message}</p>`
+            }
+        }
+
+     
+
+
+
+
+
+            //llamar a funcion con evento DOM cargado
+        document.addEventListener("DOMContentLoaded", function(e) {
+            loadPokemones(apiPoke)
+        console.log("DOM cargado");
+             });
+
+    </script>
+    
+</body>
+</html>
